@@ -26,6 +26,7 @@ public class PlayerController : MonoBehaviour
     private Vector3 _gravityDir = Vector3.down;
     private Vector3 _moveInput;
     private float _xRotation;
+    private Quaternion _yawRotation;
     private bool _grounded;
     private bool _jumpQueued;
 
@@ -46,6 +47,8 @@ public class PlayerController : MonoBehaviour
 
         if (cameraTransform != null)
             _defaultCameraLocalPos = cameraTransform.localPosition;
+
+        _yawRotation = transform.rotation;
     }
 
     void Update()
@@ -181,7 +184,8 @@ public class PlayerController : MonoBehaviour
         if (cameraTransform != null)
             cameraTransform.localRotation = Quaternion.Euler(_xRotation, 0f, 0f);
 
-        transform.Rotate(Vector3.up * mouseX);
+        _yawRotation *= Quaternion.Euler(0f, mouseX, 0f);
+        transform.rotation = _yawRotation;
     }
 
     void HandleHeadBob()
@@ -217,6 +221,7 @@ public class PlayerController : MonoBehaviour
         _rb.position        = position;
         transform.position  = position;
         transform.rotation  = rotation;
+        _yawRotation        = rotation;
         _gravityDir         = -(rotation * Vector3.up);
         _xRotation          = 0f;
         if (cameraTransform != null)

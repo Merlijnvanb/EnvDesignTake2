@@ -17,11 +17,15 @@ public class GameManager : MonoBehaviour
 
     public void OnFail()
     {
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
         SceneManager.LoadScene("DeadMenu");
     }
 
     public void OnWin()
     {
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
         SceneManager.LoadScene("WinMenu");
     }
 }

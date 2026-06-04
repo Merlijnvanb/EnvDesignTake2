@@ -4,13 +4,16 @@ using UnityEngine.SceneManagement;
 [RequireComponent(typeof(BoxCollider))]
 public class CollisionSceneLoader : MonoBehaviour
 {
-    public string Name = "DeadMenu";
+    public bool Win = false;
 
     void OnTriggerEnter(Collider other)
     {
         if (!other.CompareTag("Player"))
             return;
-        
-        SceneManager.LoadScene(Name);
+
+        if (Win)
+            GameManager.Instance.OnWin();
+        else
+            GameManager.Instance.OnFail();
     }
 }
