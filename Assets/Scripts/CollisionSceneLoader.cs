@@ -1,16 +1,16 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
+[RequireComponent(typeof(BoxCollider))]
 public class CollisionSceneLoader : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+    public string Name = "DeadMenu";
 
-    // Update is called once per frame
-    void Update()
+    void OnTriggerEnter(Collider other)
     {
+        if (!other.CompareTag("Player"))
+            return;
         
+        SceneManager.LoadScene(Name);
     }
 }
