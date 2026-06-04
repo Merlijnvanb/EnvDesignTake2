@@ -32,13 +32,13 @@ MonoBehaviour:
     renderPassEvent: 600
     material: {fileID: 2100000, guid: f0e0b491c1b25821c9aa9a0563ba8129, type: 2}
     applyToSceneView: 1
-    pixelSize: 4
-    colorCount: 32
+    pixelSize: 3
+    colorCount: 46
     saturation: 1
     contrast: 1.01
     brightness: 1.087
     enableDithering: 1
-    ditherStrength: 0.397
+    ditherStrength: 0.697
     enableOutline: 0
     outlineThickness: 0.5
     outlineColor: {r: 0.18867922, g: 0.18867922, b: 0.18867922, a: 1}

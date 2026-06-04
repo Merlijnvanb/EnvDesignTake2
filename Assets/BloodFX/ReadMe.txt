@@ -1,0 +1,3 @@
+Texture "Blood_01" is used on "Blood_Decal_01" to "Blood_Decal_21" + "Blood_Decal_Letter_A" to "Blood_Decal_Letter_Z" + "Blood_Decal_Number_00" to "Blood_Decal_Number_09"
+Texture "Blood_02" is used on "Blood_Decal_22" to "Blood_Decal_36" + "Blood_Decal_Trail_01" + Start and End parts
+Texture "Blood_03" is used on "Blood_Decal_37" & "Blood_Decal_38" + "Blood_Decal_Trail_02" to "Blood_Decal_Trail_08" + Start and End parts

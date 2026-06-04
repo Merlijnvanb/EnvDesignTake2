@@ -1,12 +1,17 @@
+using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(CharacterController))]
+[RequireComponent(typeof(Rigidbody))]
 public class PlayerController : MonoBehaviour
 {
     [Header("Movement")]
     public float moveSpeed = 5f;
-    public float gravity = -9.81f;
+    public float gravityStrength = 20f;
     public float jumpHeight = 1.5f;
+
+    [Header("Step Climbing")]
+    public float stepHeight = 0.4f;
+    public float stepSearchOvershoot = 0.01f;
 
     [Header("Look")]
     public float mouseSensitivity = 2f;
@@ -17,17 +22,25 @@ public class PlayerController : MonoBehaviour
     public float bobFrequency = 8f;
     public float bobIntensity = 0.05f;
 
-    private CharacterController _controller;
-    private Vector3 _velocity;
+    private Rigidbody _rb;
+    private Vector3 _gravityDir = Vector3.down;
     private Vector3 _moveInput;
     private float _xRotation;
+    private bool _grounded;
+    private bool _jumpQueued;
 
     private Vector3 _defaultCameraLocalPos;
     private float _bobTimer;
 
+    private List<ContactPoint> _contactPoints = new List<ContactPoint>();
+    private Vector3 _lastVelocity;
+
     void Start()
     {
-        _controller = GetComponent<CharacterController>();
+        _rb = GetComponent<Rigidbody>();
+        _rb.useGravity = false;
+        _rb.freezeRotation = true;
+
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
 
@@ -37,28 +50,124 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        HandleMovement();
+        float x = Input.GetAxisRaw("Horizontal");
+        float z = Input.GetAxisRaw("Vertical");
+        _moveInput = new Vector3(x, 0f, z);
+
+        if (Input.GetButtonDown("Jump"))
+            _jumpQueued = true;
+
         HandleLook();
         HandleHeadBob();
     }
 
+    void FixedUpdate()
+    {
+        _lastVelocity = _rb.linearVelocity;
+        CheckGrounded();
+        HandleMovement();
+        HandleStepClimb();
+        _contactPoints.Clear();
+    }
+
+    void OnCollisionEnter(Collision col) => _contactPoints.AddRange(col.contacts);
+    void OnCollisionStay(Collision col) => _contactPoints.AddRange(col.contacts);
+
+    void CheckGrounded()
+    {
+        // Start sphere above player base so it doesn't overlap the floor at cast start
+        _grounded = Physics.SphereCast(
+            _rb.position - _gravityDir * 0.5f,
+            0.3f,
+            _gravityDir,
+            out _,
+            0.3f
+        );
+    }
+
     void HandleMovement()
     {
-        bool grounded = _controller.isGrounded;
-        if (grounded && _velocity.y < 0f)
-            _velocity.y = -2f;
+        Vector3 gravityUp = -_gravityDir;
+        Vector3 forward = Vector3.ProjectOnPlane(transform.forward, gravityUp).normalized;
+        Vector3 right   = Vector3.ProjectOnPlane(transform.right,   gravityUp).normalized;
+        Vector3 moveDir = (right * _moveInput.x + forward * _moveInput.z).normalized;
 
-        float x = Input.GetAxisRaw("Horizontal");
-        float z = Input.GetAxisRaw("Vertical");
-        _moveInput = new Vector3(x, 0f, z);
-        Vector3 move = (transform.right * x + transform.forward * z).normalized;
-        _controller.Move(move * moveSpeed * Time.deltaTime);
+        float gravitySpeed = Vector3.Dot(_rb.linearVelocity, _gravityDir);
+        _rb.linearVelocity = moveDir * moveSpeed + _gravityDir * gravitySpeed;
 
-        if (Input.GetButtonDown("Jump") && grounded)
-            _velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+        if (_grounded && gravitySpeed > 0f)
+            _rb.linearVelocity -= _gravityDir * gravitySpeed;
+        else if (!_grounded)
+            _rb.AddForce(_gravityDir * gravityStrength, ForceMode.Acceleration);
 
-        _velocity.y += gravity * Time.deltaTime;
-        _controller.Move(_velocity * Time.deltaTime);
+        if (_jumpQueued && _grounded)
+            _rb.linearVelocity += gravityUp * Mathf.Sqrt(2f * gravityStrength * jumpHeight);
+
+        _jumpQueued = false;
+    }
+
+    void HandleStepClimb()
+    {
+        if (!_grounded) return;
+
+        Vector3 gravityUp = -_gravityDir;
+
+        // Find the most upward-facing contact point (ground)
+        ContactPoint groundCP = default;
+        bool foundGround = false;
+        foreach (var cp in _contactPoints)
+        {
+            float upDot = Vector3.Dot(cp.normal, gravityUp);
+            if (upDot > 0.0001f && (!foundGround || upDot > Vector3.Dot(groundCP.normal, gravityUp)))
+            {
+                groundCP = cp;
+                foundGround = true;
+            }
+        }
+        if (!foundGround) return;
+
+        // Only step when moving laterally
+        if (Vector3.ProjectOnPlane(_lastVelocity, _gravityDir).sqrMagnitude < 0.0001f) return;
+
+        foreach (var cp in _contactPoints)
+        {
+            if (TryResolveStep(out Vector3 stepOffset, cp, groundCP, gravityUp))
+            {
+                _rb.position += stepOffset;
+                _rb.linearVelocity = _lastVelocity;
+                break;
+            }
+        }
+    }
+
+    bool TryResolveStep(out Vector3 stepOffset, ContactPoint stepCP, ContactPoint groundCP, Vector3 gravityUp)
+    {
+        stepOffset = Vector3.zero;
+
+        // Must be a wall-like surface (normal not pointing upward)
+        if (Vector3.Dot(stepCP.normal, gravityUp) >= 0.4f) return false;
+
+        // Step contact must be within max step height of the ground contact
+        float heightDiff = Vector3.Dot(stepCP.point - groundCP.point, gravityUp);
+        if (heightDiff >= stepHeight) return false;
+
+        // Direction into the step along the gravity plane
+        Vector3 stepInDir = Vector3.ProjectOnPlane(-stepCP.normal, gravityUp).normalized;
+
+        // Origin: at step contact lateral position, raised to max step height above ground contact
+        float groundHeight = Vector3.Dot(groundCP.point, gravityUp);
+        Vector3 lateralPos  = stepCP.point - gravityUp * Vector3.Dot(stepCP.point, gravityUp);
+        Vector3 origin      = lateralPos + gravityUp * (groundHeight + stepHeight + 0.0001f) + stepInDir * stepSearchOvershoot;
+
+        // Raycast downward onto the specific step collider (avoids hitting anything else)
+        if (!stepCP.otherCollider.Raycast(new Ray(origin, _gravityDir), out RaycastHit hit, stepHeight))
+            return false;
+
+        float heightGain = Vector3.Dot(hit.point - groundCP.point, gravityUp) + 0.0001f;
+        if (heightGain <= 0f) return false;
+
+        stepOffset = gravityUp * heightGain + stepInDir * stepSearchOvershoot;
+        return true;
     }
 
     void HandleLook()
@@ -75,24 +184,11 @@ public class PlayerController : MonoBehaviour
         transform.Rotate(Vector3.up * mouseX);
     }
 
-    public void Teleport(Vector3 position, Quaternion rotation)
-    {
-        _controller.enabled = false;
-        transform.position = position;
-        float yaw = rotation.eulerAngles.y;
-        transform.rotation = Quaternion.Euler(0f, yaw, 0f);
-        _xRotation = 0f;
-        if (cameraTransform != null)
-            cameraTransform.localRotation = Quaternion.identity;
-        _velocity = Vector3.zero;
-        _controller.enabled = true;
-    }
-
     void HandleHeadBob()
     {
         if (cameraTransform == null) return;
 
-        bool moving = _controller.isGrounded && _moveInput.magnitude > 0.1f;
+        bool moving = _grounded && _moveInput.magnitude > 0.1f;
 
         if (moving)
             _bobTimer += Time.deltaTime * bobFrequency;
@@ -112,5 +208,18 @@ public class PlayerController : MonoBehaviour
             targetPos,
             Time.deltaTime * 15f
         );
+    }
+
+    public void Teleport(Vector3 position, Quaternion rotation)
+    {
+        _rb.linearVelocity  = Vector3.zero;
+        _rb.angularVelocity = Vector3.zero;
+        _rb.position        = position;
+        transform.position  = position;
+        transform.rotation  = rotation;
+        _gravityDir         = -(rotation * Vector3.up);
+        _xRotation          = 0f;
+        if (cameraTransform != null)
+            cameraTransform.localRotation = Quaternion.identity;
     }
 }

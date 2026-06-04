@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 7841032230067287223}
   - component: {fileID: 8154341182964575130}
   - component: {fileID: 6395303302166577371}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Main Camera
   m_TagString: MainCamera
   m_Icon: {fileID: 0}
@@ -28,7 +28,7 @@ Transform:
   m_GameObject: {fileID: 1493638285010250121}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.5, z: 0}
+  m_LocalPosition: {x: 0, y: 2, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -65,9 +65,9 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
+  near clip plane: 0.1
   far clip plane: 1000
-  field of view: 60
+  field of view: 80
   orthographic: 0
   orthographic size: 5
   m_Depth: -1
@@ -148,7 +148,7 @@ GameObject:
   - component: {fileID: 834956039127019393}
   - component: {fileID: 5916078435985646259}
   - component: {fileID: 1263837210991656744}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: RawImage
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -218,10 +218,11 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 9115806199021976424}
-  - component: {fileID: 4883196104287278968}
+  - component: {fileID: 799657424837436063}
   - component: {fileID: 8946195885718632533}
   - component: {fileID: 3798093298392182466}
-  m_Layer: 0
+  - component: {fileID: 5895887884036061647}
+  m_Layer: 6
   m_Name: Player
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -245,8 +246,8 @@ Transform:
   - {fileID: 7214467525077719059}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!143 &4883196104287278968
-CharacterController:
+--- !u!136 &799657424837436063
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -260,16 +261,14 @@ CharacterController:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
+  m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Height: 0.5
-  m_Radius: 0.125
-  m_SlopeLimit: 45
-  m_StepOffset: 0.3
-  m_SkinWidth: 0.08
-  m_MinMoveDistance: 0.001
-  m_Center: {x: 0, y: 0.25, z: 0}
+  serializedVersion: 2
+  m_Radius: 0.5
+  m_Height: 2
+  m_Direction: 1
+  m_Center: {x: 0, y: 1, z: 0}
 --- !u!114 &8946195885718632533
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -282,14 +281,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: febf3f6da0d687c1cacb13789aa6f747, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
-  moveSpeed: 5
-  gravity: -9.81
-  jumpHeight: 0.25
+  moveSpeed: 6
+  gravityStrength: 20
+  jumpHeight: 0.5
+  stepHeight: 1
+  stepSearchOvershoot: 0.01
   mouseSensitivity: 5
   maxLookAngle: 85
   cameraTransform: {fileID: 5770528932905172611}
-  bobFrequency: 15
-  bobIntensity: 0.05
+  bobFrequency: 10
+  bobIntensity: 0.075
 --- !u!114 &3798093298392182466
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -303,9 +304,36 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ProximityFade
   whiteOverlay: {fileID: 399826261441558460}
-  fadeStartDistance: 5
+  fadeStartDistance: 7.5
   fadeEndDistance: 2.5
-  fadeSpeed: 3
+  fadeSpeed: 1.5
+--- !u!54 &5895887884036061647
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8287141575496804797}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 1
+  m_Constraints: 0
+  m_CollisionDetection: 2
 --- !u!1 &8580579150090762153
 GameObject:
   m_ObjectHideFlags: 0
@@ -319,7 +347,7 @@ GameObject:
   - component: {fileID: 1015056341124709452}
   - component: {fileID: 384210200267528220}
   - component: {fileID: 399826261441558460}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Canvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}

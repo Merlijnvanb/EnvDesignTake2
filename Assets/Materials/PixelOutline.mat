@@ -13,8 +13,8 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
   m_InvalidKeywords:
+  - _ENABLEDITHERING_ON
   - _ENABLEINNEROUTLINE_ON
-  - _ENABLEOUTEROUTLINE_ON
   - _ENABLEPIXELGRID_ON
   - _INNERCOLORMODE_BRIGHTEN
   - _OUTERCOLORMODE_CUSTOM
@@ -97,14 +97,14 @@ Material:
     - _BumpScale: 1
     - _ClearCoatMask: 0
     - _ClearCoatSmoothness: 0
-    - _ColorCount: 32
+    - _ColorCount: 46
     - _Contrast: 1.01
     - _Cull: 2
     - _Cutoff: 0.5
     - _DepthThreshold: 0.5
     - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1
-    - _DitherStrength: 0.397
+    - _DitherStrength: 0.697
     - _DstBlend: 0
     - _DstBlendAlpha: 0
     - _EnableDithering: 1
@@ -127,7 +127,7 @@ Material:
     - _OuterDarkness: 0.5
     - _OuterOutlineThickness: 0.5
     - _Parallax: 0.005
-    - _PixelSize: 4
+    - _PixelSize: 3
     - _QueueOffset: 0
     - _ReceiveShadows: 1
     - _Saturation: 1
