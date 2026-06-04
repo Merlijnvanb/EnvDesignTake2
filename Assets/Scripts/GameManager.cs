@@ -15,8 +15,13 @@ public class GameManager : MonoBehaviour
         Instance = this;
     }
 
-    public void RestartGame()
+    public void OnFail()
     {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        SceneManager.LoadScene("DeadMenu");
+    }
+
+    public void OnWin()
+    {
+        SceneManager.LoadScene("WinMenu");
     }
 }

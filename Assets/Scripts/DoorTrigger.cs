@@ -33,8 +33,8 @@ public class DoorTrigger : MonoBehaviour
         }
         else
         {
-            Debug.Log("[DoorTrigger] Wrong door — restarting");
-            GameManager.Instance.RestartGame();
+            Debug.Log("[DoorTrigger] Wrong door - eeh uhr");
+            GameManager.Instance.OnFail();
         }
     }
 }
